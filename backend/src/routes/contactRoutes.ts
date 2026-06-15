@@ -42,4 +42,15 @@ router.put('/:id', auth, async (req: Request, res: Response) => {
     }
 });
 
+// Add new message (Public Route)
+router.post('/', async (req: Request, res: Response) => {
+    try {
+        const newContact = new Contact(req.body);
+        const savedContact = await newContact.save();
+        res.status(201).json(savedContact);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 export default router;
