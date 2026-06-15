@@ -95,5 +95,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// 🟢 Localhost එකේදී පමණක් app.listen වැඩ කිරීමටත්, Vercel හිදී එය නැවැත්වීමටත්
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
+
+// 🟢 Vercel Serverless Functions සඳහා මෙය අනිවාර්ය වේ
+export default app;
