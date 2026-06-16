@@ -1,12 +1,12 @@
 // src/server.ts
-import express, { Request, Response, NextFunction } from 'express'; // 🟢 අලුතින් Types import කර ඇත
+import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
-import helmet from 'helmet'; // 🛡️ ආරක්ෂක කබාය
-import rateLimit from 'express-rate-limit'; // 🛑 DDoS ප්‍රහාර වැළැක්වීමට
-import mongoSanitize from 'express-mongo-sanitize'; // 💉 NoSQL Injection වැළැක්වීමට
+import helmet from 'helmet'; 
+import rateLimit from 'express-rate-limit'; 
+import mongoSanitize from 'express-mongo-sanitize'; 
 
 // Routes Imports
 import authRoutes from './routes/authRoutes';
@@ -25,7 +25,7 @@ const app = express();
 // 1. HTTP Headers ආරක්ෂාව (Helmet)
 app.use(helmet());
 
-// 2. CORS සීමා කිරීම (Production වලදී .env හරහා URL එක දීම වඩාත් ආරක්ෂිතයි)
+// 2. CORS සීමා කිරීම
 const allowedOrigins = process.env.FRONTEND_URL 
     ? [process.env.FRONTEND_URL, 'http://localhost:8080', 'http://localhost:5173']
     : ['http://localhost:8080', 'http://localhost:5173'];
@@ -37,17 +37,17 @@ app.use(cors({
 
 // 3. DDoS ආරක්ෂාව (Rate Limiting)
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // විනාඩි 15ක්
-    max: 100, // එක් IP එකකට විනාඩි 15ට උපරිම 100 requests
+    windowMs: 15 * 60 * 1000, 
+    max: 100, 
     message: { message: 'Too many requests, please try again later.' }
 });
 app.use('/api/', limiter);
 
 // 4. Data Parsing
-app.use(express.json({ limit: '2mb' })); // Payload size 2mb දක්වා අඩු කිරීම
+app.use(express.json({ limit: '2mb' })); 
 app.use(express.urlencoded({ limit: '2mb', extended: true }));
 
-// 🟢 5. Express 5 සඳහා අනිවාර්ය විසඳුම (TypeError එක වළක්වා ගැනීමට)
+// 5. Express 5 සඳහා අනිවාර්ය විසඳුම
 app.use((req: Request, res: Response, next: NextFunction) => {
     Object.defineProperty(req, 'query', {
         value: req.query,
@@ -58,21 +58,35 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     next();
 });
 
-// 6. දත්ත පවිත්‍ර කිරීම (Injection ආරක්ෂාව)
-app.use(mongoSanitize({
-  replaceWith: '_'
-}));
+// 6. දත්ත පවිත්‍ර කිරීම
+app.use(mongoSanitize({ replaceWith: '_' }));
 
-// Cloudinary & DB Connection
+// Cloudinary Config
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
     api_key: process.env.CLOUDINARY_API_KEY, 
     api_secret: process.env.CLOUDINARY_API_SECRET 
 });
 
-mongoose.connect(process.env.MONGO_URI as string)
-    .then(() => console.log('✅ Connected to MongoDB...'))
-    .catch(err => console.error('❌ MongoDB error:', err));
+// 🔴 7. Vercel Serverless සඳහා MongoDB Connection Caching (වඩාත්ම සාර්ථක විසඳුම)
+const connectDB = async () => {
+    // දැනටමත් සම්බන්ධ වී ඇත්නම්, නැවත සම්බන්ධ වීම වළක්වයි
+    if (mongoose.connection.readyState >= 1) {
+        return;
+    }
+    try {
+        await mongoose.connect(process.env.MONGO_URI as string);
+        console.log('✅ Connected to MongoDB...');
+    } catch (err) {
+        console.error('❌ MongoDB error:', err);
+    }
+};
+
+// හැම API Request එකකදීම Database සම්බන්ධතාවය පරීක්ෂා කර තහවුරු කිරීම
+app.use(async (req: Request, res: Response, next: NextFunction) => {
+    await connectDB();
+    next();
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -85,7 +99,7 @@ app.use('/api/hero', heroRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/merch', merchRoutes);
 
-// 🟢 7. Global Error Handler (මෙහිදී Server එක crash වීම වළක්වයි)
+// 8. Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     console.error("🔥 Server Error:", err.message);
     res.status(500).json({ 
@@ -95,11 +109,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
-// 🟢 Localhost එකේදී පමණක් app.listen වැඩ කිරීමටත්, Vercel හිදී එය නැවැත්වීමටත්
+// Localhost එකේදී පමණක් app.listen වැඩ කිරීමටත්, Vercel හිදී එය නැවැත්වීමටත්
 if (process.env.NODE_ENV !== 'production') {
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 }
 
-// 🟢 Vercel Serverless Functions සඳහා මෙය අනිවාර්ය වේ
+// Vercel Serverless Functions සඳහා අනිවාර්ය වේ
 export default app;
