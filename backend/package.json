@@ -2,14 +2,15 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
-  },
+  "main": "dist/server.js",
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "scripts": {
+    "start": "node dist/server.js",
+    "build": "tsc",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+  },
   "dependencies": {
     "axios": "^1.17.0",
     "bcryptjs": "^3.0.3",
@@ -22,8 +23,7 @@
     "google-auth-library": "^10.6.2",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.2.1",
-    "nodemon": "^3.1.11"
+    "mongoose": "^9.2.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
@@ -32,13 +32,9 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^25.3.0",
+    "nodemon": "^3.1.11",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
-  },
-  "scripts": {
-  "start": "node dist/server.js",
-  "build": "tsc",
-  "dev": "nodemon src/server.ts"
-}
+  }
 }
