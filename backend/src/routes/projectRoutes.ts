@@ -15,26 +15,47 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // 2. Add New Project (Admin Only)
+// src/routes/projectRoutes.ts
 router.post('/', auth, async (req: AuthRequest, res: Response) => {
     try {
-        const newProject = new Project(req.body);
+        const { title, description, techStack, link, githubLink, category, imageUrl } = req.body;
+        
+        const newProject = new Project({
+            title, description, techStack, link, githubLink, category, imageUrl
+        });
+        
         const savedProject = await newProject.save();
         res.status(201).json(savedProject);
     } catch (error: any) {
         res.status(500).json({ error: error.message });
     }
 });
-
 // 3. Update Project (Admin Only)
 router.put('/:id', auth, async (req: AuthRequest, res: Response) => {
     try {
-        const updatedProject = await Project.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const { title, description, techStack, link, githubLink, category, imageUrl } = req.body;
+        
+        // 1. මුලින්ම project එක හොයන්න
+        const project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ message: 'Project not found' });
+
+        // 2. අතින් අගයන් Set කරන්න (Explicit update)
+        project.title = title;
+        project.description = description;
+        project.techStack = techStack;
+        project.link = link;
+        project.githubLink = githubLink; // 🟢 මෙතනදී අනිවාර්යයෙන්ම Assign වෙනවා
+        project.category = category;
+        project.imageUrl = imageUrl;
+
+        // 3. Save කරන්න
+        const updatedProject = await project.save();
         res.json(updatedProject);
     } catch (error: any) {
+        console.error("Update Error:", error);
         res.status(500).json({ error: error.message });
     }
 });
-
 // 4. Delete Project (Admin Only)
 router.delete('/:id', auth, async (req: AuthRequest, res: Response) => {
     try {

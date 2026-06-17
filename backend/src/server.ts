@@ -109,11 +109,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     });
 });
 
-// Localhost එකේදී පමණක් app.listen වැඩ කිරීමටත්, Vercel හිදී එය නැවැත්වීමටත්
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-}
 
+// Server එක ධාවනය කිරීම (Railway විසින් ස්වයංක්‍රීයව PORT එකක් ලබාදෙයි)
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+});
 // Vercel Serverless Functions සඳහා අනිවාර්ය වේ
 export default app;

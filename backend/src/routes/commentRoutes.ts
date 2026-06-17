@@ -35,4 +35,23 @@ router.delete('/:id', auth, async (req: AuthRequest, res: Response) => {
     }
 });
 
-export default router;
+// 4. Update Comment (Admin Only) 
+router.put('/:id', auth, async (req: AuthRequest, res: Response): Promise<any> => {
+    try { 
+        const updatedComment = await Comment.findByIdAndUpdate(
+            req.params.id, 
+            req.body, 
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedComment) {
+            return res.status(404).json({ message: 'Comment not found' });
+        }
+
+        res.json(updatedComment); 
+    } catch (error: any) { 
+        res.status(500).json({ error: error.message }); 
+    }
+});
+
+export default router; 
